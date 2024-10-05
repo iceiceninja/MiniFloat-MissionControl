@@ -2,18 +2,19 @@ package org.example;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.net.*;
 
-public class Form extends JPanel {
+
+/*
+* This class is a JPanel that sets up the form
+*   that the user inputs the information for the device in.
+*   Use the Form's addComponent to add components that are needed in order to see output.
+*
+* */
+public class Form extends JPanel implements  OutputDisplay{
     JTextField addressField;
-    JTextField portField;
-    JButton submitForm;
-    JCheckBox retryBox;
+    JButton submitButton;
     JTextArea outputField;
 
-    Dimension DEFAULT_FIELD_DIMENSION = new Dimension(75,30);
     public Form()
     {
         setLayout( new BoxLayout(this, BoxLayout.PAGE_AXIS) );
@@ -21,47 +22,36 @@ public class Form extends JPanel {
         JLabel title = new JLabel("Mission Control");
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-//        JLabel addressLabel = new JLabel("IP Address:");
-//        addressField = new JTextField(12); // assuming IPv4
-//        addressLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-//        addressField.setPreferredSize(DEFAULT_FIELD_DIMENSION);
-//
-//        JLabel portLabel = new JLabel("Port Number:");
-//        portField = new JTextField(5);
-//
-//        JLabel retryLabel = new JLabel("Enable Retries?:");
-//        retryBox = new JCheckBox();
-
-        submitForm = new JButton("Send Signal");
+        submitButton = new JButton("GET Request");
+        /*
+        TODO:
+         Have separate buttons for however we want to get/send data to and from the ESP32?
+         Like a button labeled Start that sends a post request to the esp's IP address with /start
+         and then /data to get the data from it? Button could be labelled "Retrieve Data" or something
+        */
 
         JLabel outputLabel = new JLabel("Output:");
         outputField = new JTextArea(16,32);
         outputField.setEditable(false);
         outputField.setLineWrap(true);
-//        outputField.setPreferredSize(new Dimension(200,150));
+
         JScrollPane scroll = new JScrollPane(outputField);
         scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 
 
-        submitForm.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                submitForm();
-            }
-        });
+        submitButton.addActionListener((event)->submitForm()); // Tells button to call the 'submitForm' method when it is clicked
 
 
         add(title);
         addressField = (JTextField) addComponent("IP Address:", new JTextField(12));
-        portField = (JTextField) addComponent("Port Number:",new JTextField(5));
-        retryBox = (JCheckBox) addComponent("Enable Retries? ", new JCheckBox());
 
-        add(submitForm);
+        add(submitButton);
 
         add(outputLabel);
         add(scroll);
-//        add(outputField);
     }
+
+    // Used to have more use for this. Keep around just incase we need more fields
     Component addComponent(String label, Component component)
     {
         JPanel jPanel = new JPanel();
@@ -71,26 +61,18 @@ public class Form extends JPanel {
         add(jPanel);
         return component;
     }
+
+    //  Everything here occurs when the form is submitted (or when the current submit button is pressed)
     private void submitForm()
     {
-        try {
-            // Add more validation logic, this currently sucks but will catch if it is too long
-            if (InetAddress.getByName(addressField.getText()) instanceof Inet4Address ||
-                    InetAddress.getByName(addressField.getText()) instanceof Inet6Address) {
-                ConnectionDetails connectionDetails = ConnectionDetails.builder()
-                        .ipAddress(addressField.getText())
-                        .port(portField.getText())
-                        .doRetry(retryBox.isSelected())
-                        .build();
-                outputText(connectionDetails.toString());
-            }
-        }catch (UnknownHostException e)
-        {
-            outputText(e.getMessage());
-        }
+        // Add more validation logic. RegEx for valid IP? I tried using an inet thing to validate, but it said 123 was a valid IP (maybe it is)
+        ConnectionManager connectionManager =  new ConnectionManager(this);
+        connectionManager.makeConnection(addressField.getText());
     }
-    public void outputText(String text)
-    {
-        outputField.append(text + "\n");
+
+    // This is used to display data in the output text field
+    @Override
+    public void display(String data) {
+        outputField.append(data + "\n");
     }
 }
