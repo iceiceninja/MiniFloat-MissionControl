@@ -2,6 +2,8 @@ package org.example;
 
 import javax.swing.*;
 import java.awt.*;
+import com.formdev.flatlaf.intellijthemes.FlatCarbonIJTheme;
+
 
 /*
 * Creates the JFrame that holds our form as well as sets values for that frame.
@@ -16,6 +18,12 @@ import java.awt.*;
 * */
 public class Main {
     public static void main(String[] args) {
+        try {
+            UIManager.setLookAndFeel(new FlatCarbonIJTheme());
+        } catch( Exception ex ) {
+            System.err.println( "Failed to initialize LaF" );
+        }
+
         JFrame jFrame = new JFrame("Mission Control");
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jFrame.setPreferredSize(new Dimension(700,500));
